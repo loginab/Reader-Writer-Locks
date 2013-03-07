@@ -1,0 +1,130 @@
+1.1	The other approach involves Priority Ceiling. In this approach every resource is allocated a predefined ceiling priority.When a process locks a resource the process is given the ceiling priority. When the process releases the lock, it is returned its original priority. Also, the ceiling priority has to be great than all the processes wanting to have a lock on the resource.
+
+1.2	Priority inversion has been implemented using the an addition variable pinh associated with each process kept in the proc.h file. When a process comes hold the lock and is made to go in the waiting state, I check for all the holders of the lock if the coming locks priority is less than any of the holding locks priority OR the inherited priority (which is initially zero). If not we change the the value of pinh of all the holders. For all the running process we dequeue the process all insert it back in the ready queue according to the inherited priority. If any process is in the wait state I call the same function back on the lock desc that the process is waiting on.When a lock is released by a process. I change the pinh to zero and call the priority inheritance function on all the other ldesc on which it is holding the locks.
+
+Changes made :
+proc. h : variables pinh  , wait_lock
+ready.c, resched.c : inserting the process based on base priority or the inherited priority
+file queue.c : implements the change priority function
+
+
+1.3	) Test case for Priority Inversion
+
+Explanation of the test case: W1 comes grabs a lock on lck with priority 40 . R1 comes tries to get a lock on lck1 with priority 55, inverted the priority of w1. Now W2 priority 50 come tries to get a lock on lck2. Does not pre-empt W1.
+
+
+Output : Locks Version :
+
+
+Xinu Version (CSC501 1-2009 base) #1 (agupta15@vcla1-7.hpc) Wed Feb 27 15:04:43 EST 2013
+
+16777216 bytes real mem
+93019 bytes Xinu code
+clock enabled
+Please Input:
+1
+
+Test 1: test the basic priority inheritence
+-start writer, then sleep 1s. lock granted to write (prio 40)
+  writerA: to acquire lock
+  writerA: acquired lock, sleep 10s
+-start reader, then sleep 1s. lock granted to reader (prio 55)
+  reader B: to acquire lock
+  reader B: acquired lock
+  reader B: to release lock
+-start writer, then sleep 1s. writer B(prio 55)
+  writerB: to acquire lock
+  writerB: acquired lock, sleep 10s
+  writerA: to release lock
+  writerB: to release lock
+Test 3 OK
+
+
+All user processes have completed.
+
+
+
+In the Original Xinu Implementation W2 would premept W1
+	
+
+
+
+
+
+Q2)
+Producer/Consumer problem
+
+Xinu Version (CSC501 1-2009 base) #1 (agupta15@vcla1-7.hpc) Wed Feb 27 14:5                                                                                  2:20 EST 2013
+
+16777216 bytes real mem
+88795 bytes Xinu code
+clock enabled
+p1 produces -> 1
+c2 consumes -> 0
+p1 produces -> 1
+c1 consumes -> 0
+p1 produces -> 1
+c1 consumes -> 0
+p1 produces -> 1
+p3 produces -> 2
+c1 consumes -> 1
+p3 produces -> 2
+c2 consumes -> 1
+c1 consumes -> 0
+p3 produces -> 1
+c1 consumes -> 0
+p3 produces -> 1
+p1 produces -> 2
+c2 consumes -> 1
+p1 produces -> 2
+c2 consumes -> 1
+p1 produces -> 2
+c1 consumes -> 1
+c2 consumes -> 0
+p1 produces -> 1
+p3 produces -> 2
+p1 produces -> 3
+p3 produces -> 4
+p1 produces -> 5
+p3 produces -> 6
+c1 consumes -> 5
+p3 produces -> 6
+c2 consumes -> 5
+p3 produces -> 6
+p1 produces -> 7
+c2 consumes -> 6
+p1 produces -> 7
+c1 consumes -> 6
+c2 consumes -> 5
+p1 produces -> 6
+p3 produces -> 7
+c1 consumes -> 6
+p3 produces -> 7
+c1 consumes -> 6
+p3 produces -> 7
+c2 consumes -> 6
+p3 produces -> 7
+p1 produces -> 8
+c1 consumes -> 7
+p1 produces -> 8
+p3 produces -> 9
+c2 consumes -> 8
+p3 produces -> 9
+c2 consumes -> 8
+p3 produces -> 9
+c1 consumes -> 8
+c2 consumes -> 7
+p3 produces -> 8
+p1 produces -> 9
+p3 produces -> 10
+* p3 finishes -> 10
+p3 completes
+p1 completes
+c2 completes
+p2 completes
+c1 completes
+
+
+All user processes have completed.
+
+Reference: Discussion with Priyanka Singhal on the approach for Reader/Writer and locking mechanism for the Producer Consumer problem.
